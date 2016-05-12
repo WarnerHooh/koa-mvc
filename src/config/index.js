@@ -1,6 +1,8 @@
 import KoaPug from 'koa-pug';
 import serve from 'koa-static';
+import json from 'koa-json';
 import routerConf from '../config/routerConf';
+import { initConnection as databaseConf } from '../config/databaseConf';
 
 //init router
 const initApp = (app) => {
@@ -15,6 +17,12 @@ const initApp = (app) => {
     viewPath: 'src/views',
     app: app
   });
+
+  //setup json support
+  app.use(json());
+
+  //setup database
+  databaseConf();
 }
 
 export default initApp;
