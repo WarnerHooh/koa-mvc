@@ -1,1 +1,20 @@
-h1 User
+extend ./layout/main
+
+
+block header
+	h1= title
+
+block content
+	p You can add an user here.
+	form(action="add", method="POST")
+		div
+			label Name:
+			input(type="text", name="name", value="")
+		div
+			label Age:
+			input(type="number", name="age", value="")
+		div
+			input(type="submit", value="Submit")
+
+block footer
+	include partial/footer
