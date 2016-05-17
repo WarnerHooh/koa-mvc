@@ -1,8 +1,8 @@
 import KoaPug from 'koa-pug';
 import serve from 'koa-static';
 import json from 'koa-json';
-import routerConf from '../config/routerConf';
-import { initConnection as databaseConf } from '../config/databaseConf';
+import routerConf from './routerConf';
+import { initConnection as databaseConf } from './databaseConf';
 
 //init router
 const initApp = (app) => {
