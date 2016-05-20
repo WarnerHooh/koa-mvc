@@ -1,9 +1,7 @@
-import promiser from '../utils/promiser';
-import { getConnection } from '../config/databaseConf';
+import connection from '../utils/connection';
 
-const connection = getConnection();
-const query = promiser(connection.query, connection);
-const insert = promiser(connection.insert, connection);
+const { query, insert } = connection;
+
 
 // query all users
 const queryUsers = async () => { 

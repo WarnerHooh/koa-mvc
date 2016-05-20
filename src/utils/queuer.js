@@ -9,6 +9,7 @@ function Queuer(parallel = 5) {
   this._execting = 0;
   this._tasks = [];
   this._results = [];
+  this._running = false;
 
   return this;
 }
@@ -26,8 +27,12 @@ Queuer.prototype.getNext = function() {
 }
 
 Queuer.prototype.inspect = function() {
-  if(this._tasks.length &&  this._execting < this._parallel) {
-    this.next();
+  if(this._tasks.length === 0) {
+    this.sleep();
+  } else {
+    if(this._running && this._execting < this._parallel) {
+      this.next();
+    }
   }
 }
 
@@ -49,13 +54,28 @@ Queuer.prototype.next = function() {
       s._execting --;
       s.inspect();
     });
+  } else {
+    this.sleep();
   }
 }
 
 Queuer.prototype.run = function() {
+  this._running = true;
   this.next();
 }
 
+Queuer.prototype.sleep = function() {
+  this._running = false;
+}
+
+Queuer.prototype.wake = function() {
+  console.log(this._running);
+  if(!this._running) {
+    this.run();
+  }
+}
+
+// TODO
 Queuer.prototype.all = function() {
 
 }
