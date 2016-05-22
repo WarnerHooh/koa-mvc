@@ -90,16 +90,19 @@ async function scanArticlePage (link) {
   $ = await detachData(link);
 
   let noChinesePattern = /[^u4E00-u9FA5]/g,
-      idPattern = /\d+$/,
+      podIdPattern = /\d+$/,
+      pageIdPattern = /\d+(?=\.html)/,
       pageTitle = $('.title_viewbox h2').text(),
       episodeTitle = '',
       episodeId = '',
+      audioPageId = '',
       paragraphs = [],
       paragraphsList = [],
       audioPageLink = '';
 
   episodeTitle = pageTitle.replace(noChinesePattern, '');
-  episodeId = parseInt(episodeTitle.match(idPattern)[0]);
+  episodeId = parseInt(episodeTitle.match(podIdPattern)[0]);
+  audioPageId = parseInt(link.match(pageIdPattern)[0]);
   paragraphs = $('#zoom p');
 
   paragraphs.each(function (index) {
@@ -107,7 +110,7 @@ async function scanArticlePage (link) {
   });
 
   // Then Scan Audio
-  audioPageLink = getAudioLink(episodeId);
+  audioPageLink = getAudioLink(audioPageId);
   queuer.add(scanAudioPage.bind(null, audioPageLink, episodeId));
   queuer.wake();
 
