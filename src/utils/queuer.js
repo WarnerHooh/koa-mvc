@@ -45,7 +45,7 @@ Queuer.prototype.next = function() {
     console.log('current _execting: ' + this._execting);
     s.inspect();
 
-    next.then(function(data) {
+    next().then(function(data) {
       if(data !== undefined) {
         // console.log(data)
         s._results.push(data);

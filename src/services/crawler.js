@@ -41,9 +41,8 @@ for (var i = conf.pageNum; i >= 1; i--) {
 let queuer = new Queuer();
 
 pageUrls.forEach((page) => {
-  queuer.add(scanListPage(page));
+  queuer.add(scanListPage.bind(null, page));
 });
-//TOFIX
 queuer.run();
 
 /**
@@ -74,7 +73,7 @@ async function scanListPage (link) {
     articleLink = getArticlePageLink(articleLink);
 
     // Then Scan Article
-    queuer.add(scanArticlePage(articleLink));
+    queuer.add(scanArticlePage.bind(null, articleLink));
   });
 
   queuer.wake();
@@ -109,7 +108,7 @@ async function scanArticlePage (link) {
 
   // Then Scan Audio
   audioPageLink = getAudioLink(episodeId);
-  queuer.add(scanAudioPage(audioPageLink, episodeId));
+  queuer.add(scanAudioPage.bind(null, audioPageLink, episodeId));
   queuer.wake();
 
   await insertPod({
