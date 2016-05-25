@@ -1,25 +1,19 @@
-import http from 'http';
 import url from 'url';
 import superagent from 'superagent';
 import cheerio from 'cheerio';
 
 import promiser from '../utils/promiser';
 import Queuer from '../utils/queuer';
-import { insertPod, updatePodAudio } from './pod'
+import connection from '../utils/connection'
+import { insertPod, queryPods, updatePodAudio } from './pod'
 
 const conf = {
   baseUrl: 'http://www.tingroom.com/',
-  pageNum: 10,
-  startDate: new Date(),
-  endDate: false
-}
-
-const dividingChar = String.fromCharCode(0x12);
-
-let catchData = [],
-    pageUrls = [];
+  pageNum: 1
+};
 
 let superGet = promiser(superagent.get, superagent);
+let queuer = new Queuer();
 
 function getListPageLink(i) {
   return `${conf.baseUrl}lesson/englishpod/list_${i}.html`
@@ -32,18 +26,6 @@ function getArticlePageLink(partial) {
 function getAudioLink(i) {
   return `${conf.baseUrl}play.php?id=${i}`;
 }
-
-for (var i = conf.pageNum; i >= 1; i--) {
-  pageUrls.push(getListPageLink(i))
-};
-
-
-let queuer = new Queuer();
-
-pageUrls.forEach((page) => {
-  queuer.add(scanListPage.bind(null, page));
-});
-queuer.run();
 
 /**
  * @description Get page data by superGet and return cherrio object
@@ -89,7 +71,8 @@ async function scanArticlePage (link) {
 
   $ = await detachData(link);
 
-  let noChinesePattern = /[^u4E00-u9FA5]/g,
+  let dividingChar = String.fromCharCode(0x12),
+      noChinesePattern = /[^u4E00-u9FA5]/g,
       podIdPattern = /\d+$/,
       pageIdPattern = /\d+(?=\.html)/,
       pageTitle = $('.title_viewbox h2').text(),
@@ -138,4 +121,17 @@ async function scanAudioPage (link, podId) {
 
   console.log(`Insert audio for pod [${podId}].`);
 }
+
+/**
+ * @description set up the task queue
+ */
+queuer.on('drain', () => {
+  connection.end();
+})
+
+for (var i = 1; i <= conf.pageNum; i++) {
+  queuer.add(scanListPage.bind(null, getListPageLink(i)));
+};
+
+queuer.run();
 

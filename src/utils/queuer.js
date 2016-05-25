@@ -1,3 +1,5 @@
+import util from 'util';
+import EventEmitter from 'events';
 import f from 'promise.prototype.finally'
 import promiser from './promiser';
 
@@ -14,6 +16,8 @@ function Queuer(parallel = 5) {
   return this;
 }
 
+util.inherits(Queuer, EventEmitter);
+
 Queuer.prototype.add = function(task) {
   this._tasks.push(task);
 }
@@ -26,9 +30,14 @@ Queuer.prototype.getNext = function() {
   return this.getSize() ? this._tasks.shift() : false;
 }
 
-Queuer.prototype.inspect = function() {
+//[postExec] If this inspection is after a task execution
+Queuer.prototype.inspect = function(postExec) {
   if(this._tasks.length === 0) {
     this.sleep();
+    
+    if(postExec && this._execting === 0) {
+      this.emit('drain', this);
+    }
   } else {
     if(this._running && this._execting < this._parallel) {
       this.next();
@@ -37,22 +46,21 @@ Queuer.prototype.inspect = function() {
 }
 
 Queuer.prototype.next = function() {
-  let s = this;
+  let _this = this;
   let next = this.getNext();
 
   if(next) {
-    s._execting ++;
-    console.log('current _execting: ' + this._execting);
-    s.inspect();
+    _this._execting ++;
+    _this.inspect();
 
     next().then(function(data) {
       if(data !== undefined) {
         // console.log(data)
-        s._results.push(data);
+        _this._results.push(data);
       }
     }).finally(function(e) {
-      s._execting --;
-      s.inspect();
+      _this._execting --;
+      _this.inspect(true);
     });
   } else {
     this.sleep();
@@ -69,7 +77,6 @@ Queuer.prototype.sleep = function() {
 }
 
 Queuer.prototype.wake = function() {
-  console.log(this._running);
   if(!this._running) {
     this.run();
   }

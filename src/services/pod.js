@@ -8,11 +8,9 @@ const queryPods = async () => {
 
   try {
     rs = await query('SELECT * FROM `Pod` ORDER BY `podId`');  
-    console.log(rs)
   } catch(e) {
     console.log(e);
   }
-
   return rs;
 };
 
