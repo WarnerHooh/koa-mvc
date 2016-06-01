@@ -13,10 +13,8 @@ const conf = {
   pageNum: 1
 };
 
-async function run() {
+async function setupAndRun() {
   let result = await checkPod(conf.podName);
-  console.log(result);
-
 
   if(result.length) {
     console.log('clear table');
@@ -29,7 +27,7 @@ async function run() {
   queuer.run();
 }
 
-run();
+setupAndRun();
 
 
 let superGet = promiser(superagent.get, superagent);
