@@ -20,14 +20,13 @@ const checkPod = async (podName) => {
 
   try {
     rs = await query('SHOW TABLES LIKE ?', podName);
-    console.log(rs);
-    console.log(rs.length);
   } catch(e) {
     console.log(e);
   }
   return rs;
 };
 
+// create a pod
 const createPod = async (podName) => {
   let rs = null;
 
