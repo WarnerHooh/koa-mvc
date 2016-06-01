@@ -4,8 +4,10 @@ import { getPods } from '../controllers/pod';
 
 const podRouter = new KoaRouter({prefix: '/pods'});
 
-podRouter.get('/', async (ctx, next) => {
-  ctx.body = await getPods();
+podRouter.get('/:podName', async (ctx, next) => {
+  console.log(ctx.params);
+  ctx.body = await getPods(ctx.params.podName);
 });
+
 
 export default podRouter;

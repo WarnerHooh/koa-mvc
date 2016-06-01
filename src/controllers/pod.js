@@ -1,7 +1,7 @@
 import { queryPods } from '../services/pod';
 
-const getPods = async () => {
-  let rs = await queryPods();
+const getPods = async (podName) => {
+  let rs = await queryPods(podName);
   return rs;
 };
 

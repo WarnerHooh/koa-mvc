@@ -5,12 +5,32 @@ import cheerio from 'cheerio';
 import promiser from '../utils/promiser';
 import Queuer from '../utils/queuer';
 import connection from '../utils/connection'
-import { insertPod, queryPods, updatePodAudio } from './pod'
+import { insertPod, checkPod, createPod, clearPod, queryPods, updatePodAudio } from './pod'
 
 const conf = {
   baseUrl: 'http://www.tingroom.com/',
+  podName: 'englishpod',
   pageNum: 1
 };
+
+async function run() {
+  let result = await checkPod(conf.podName);
+  console.log(result);
+
+
+  if(result.length) {
+    console.log('clear table');
+    await clearPod(conf.podName);
+  } else {
+    console.log('create table');
+    await createPod(conf.podName);
+  }
+
+  queuer.run();
+}
+
+run();
+
 
 let superGet = promiser(superagent.get, superagent);
 let queuer = new Queuer();
@@ -97,7 +117,7 @@ async function scanArticlePage (link) {
   queuer.add(scanAudioPage.bind(null, audioPageLink, episodeId));
   queuer.wake();
 
-  await insertPod({
+  await insertPod(conf.podName, {
     podId: episodeId,
     podTitle: episodeTitle,
     podParagraph: paragraphsList.join(dividingChar)
@@ -117,7 +137,7 @@ async function scanAudioPage (link, podId) {
   let mp3data = $("#dewplayer-vol").attr('data'),
       mp3url = mp3data.split('=')[1];
 
-  await updatePodAudio(mp3url, podId);
+  await updatePodAudio(conf.podName, mp3url, podId);
 
   console.log(`Insert audio for pod [${podId}].`);
 }
@@ -132,6 +152,3 @@ queuer.on('drain', () => {
 for (var i = 1; i <= conf.pageNum; i++) {
   queuer.add(scanListPage.bind(null, getListPageLink(i)));
 };
-
-queuer.run();
-
