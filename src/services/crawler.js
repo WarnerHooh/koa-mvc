@@ -9,9 +9,16 @@ import { insertPod, checkPod, createPod, clearPod, queryPods, updatePodAudio } f
 
 const conf = {
   baseUrl: 'http://www.tingroom.com/',
-  podName: 'englishpod',
-  pageNum: 1
+  podName: 'ellenShow',  //englishpod
+  pageNum: 4
 };
+
+// CREATE TABLE `test`.`Pods` (
+//   `id` INT NOT NULL AUTO_INCREMENT,
+//   `title` VARCHAR(45) NULL,
+//   `description` VARCHAR(200) NULL,
+//   `image` VARCHAR(200) NULL,
+//   PRIMARY KEY (`id`));
 
 async function setupAndRun() {
   let result = await checkPod(conf.podName);
@@ -22,6 +29,10 @@ async function setupAndRun() {
   } else {
     console.log('create table');
     await createPod(conf.podName);
+    await insertPod('Pods', {
+      title: conf.podName,
+      description: 'English Podcast'
+    });
   }
 
   queuer.run();
@@ -34,7 +45,7 @@ let superGet = promiser(superagent.get, superagent);
 let queuer = new Queuer();
 
 function getListPageLink(i) {
-  return `${conf.baseUrl}lesson/englishpod/list_${i}.html`
+  return `${conf.baseUrl}lesson/${conf.podName}/list_${i}.html`
 }
 
 function getArticlePageLink(partial) {
@@ -101,8 +112,10 @@ async function scanArticlePage (link) {
       paragraphsList = [],
       audioPageLink = '';
 
-  episodeTitle = pageTitle.replace(noChinesePattern, '');
-  episodeId = parseInt(episodeTitle.match(podIdPattern)[0]);
+  // episodeTitle = pageTitle.replace(noChinesePattern, '');
+  episodeTitle = pageTitle;
+  // episodeId = parseInt(episodeTitle.match(podIdPattern)[0]);
+  episodeId = pageTitle.replace(noChinesePattern, '');
   audioPageId = parseInt(link.match(pageIdPattern)[0]);
   paragraphs = $('#zoom p');
 

@@ -3,6 +3,18 @@ import connection from '../utils/connection';
 const { query, insert } = connection;
 
 // query all pods
+const queryPodList = async (podName) => {
+  let rs = null;
+
+  try {
+    rs = await query('SELECT * FROM ?? ORDER BY `id`', podName);
+  } catch(e) {
+    console.log(e);
+  }
+  return rs;
+};
+
+// query all episodes in a pod
 const queryPods = async (podName) => {
   let rs = null;
 
@@ -89,6 +101,7 @@ const updatePodAudio = async (podName, podAudio, podId) => {
 }
 
 export {
+  queryPodList,
   queryPods,
   checkPod,
   createPod,
