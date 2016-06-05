@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "start": "babel-node app",
-    "test": "babel-node src/services/crawler"
+    "crawl": "babel-node src/services/crawler",
+    "test": ""
   },
   "author": "Warner.Hooh",
   "license": "ISC",
@@ -27,5 +28,7 @@
     "promise.prototype.finally": "^1.0.1",
     "superagent": "^1.4.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "koa-cors": "0.0.16"
+  }
 }

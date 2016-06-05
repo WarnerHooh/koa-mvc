@@ -1,6 +1,7 @@
 import KoaPug from 'koa-pug';
 import serve from 'koa-static';
 import json from 'koa-json';
+import cors from 'koa-cors';
 import routerConf from './routerConf';
 import { initConnection as databaseConf } from './databaseConf';
 
@@ -8,6 +9,9 @@ import { initConnection as databaseConf } from './databaseConf';
 const initApp = (app) => {
   //setup static folders
   app.use(serve('public'));
+
+  //enable cros
+  app.use(cors());
 
   //setup routers
   routerConf(app);
