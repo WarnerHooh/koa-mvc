@@ -38,6 +38,25 @@ const checkPod = async (podName) => {
   return rs;
 };
 
+// create the pod summary
+const createPodSummary = async (tableName) => {
+  let rs = null;
+
+  try {
+    await query('CREATE TABLE ?? (' +
+                ' id int(11) AUTO_INCREMENT,' +
+                ' title VARCHAR(45),' +
+                ' descriiption VARCHAR(200),' +
+                ' count int(11),' +
+                ' PRIMARY KEY(id))'
+                , tableName);
+    rs = true;
+  } catch(e) {
+    console.log(e);
+  }
+  return rs;
+};
+
 // create a pod
 const createPod = async (podName) => {
   let rs = null;
@@ -47,7 +66,7 @@ const createPod = async (podName) => {
                       ' id int(11) AUTO_INCREMENT,' +
                       ' podId int(11),' +
                       ' podTitle VARCHAR(45),' +
-                      ' podParagraph VARCHAR(1000),' +
+                      ' podParagraph VARCHAR(5000),' +
                       ' podAudio VARCHAR(200),' +
                       ' PRIMARY KEY(id))'
                       , podName);
@@ -107,5 +126,6 @@ export {
   createPod,
   clearPod,
   insertPod,
-  updatePodAudio
+  updatePodAudio,
+  createPodSummary
 }

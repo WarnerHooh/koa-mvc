@@ -5,55 +5,70 @@ import cheerio from 'cheerio';
 import promiser from '../utils/promiser';
 import Queuer from '../utils/queuer';
 import connection from '../utils/connection'
-import { insertPod, checkPod, createPod, clearPod, queryPods, updatePodAudio } from './pod'
+import { insertPod, checkPod, createPod, clearPod, queryPods, updatePodAudio, createPodSummary } from './pod'
+import getCrawlerConf from '../config/crawlerConf'
 
-const conf = {
-  baseUrl: 'http://www.tingroom.com/',
-  podName: 'ellenShow',  //englishpod
-  pageNum: 4
-};
 
-// CREATE TABLE `test`.`Pods` (
-//   `id` INT NOT NULL AUTO_INCREMENT,
-//   `title` VARCHAR(45) NULL,
-//   `description` VARCHAR(200) NULL,
-//   `image` VARCHAR(200) NULL,
-//   PRIMARY KEY (`id`));
+const CONF = getCrawlerConf();
+
+let superGet = promiser(superagent.get, superagent);
+let queuer = new Queuer();
 
 async function setupAndRun() {
-  let result = await checkPod(conf.podName);
+  let podSummary = 'Pods',
+    // to check if the Pod Summary table exists
+    existedPodSummary = await checkPod(podSummary);
 
-  if(result.length) {
-    console.log('clear table');
-    await clearPod(conf.podName);
-  } else {
-    console.log('create table');
-    await createPod(conf.podName);
-    await insertPod('Pods', {
-      title: conf.podName,
-      description: 'English Podcast'
-    });
+  if(!existedPodSummary.length) {
+    await createPodSummary(podSummary);
   }
+
+  for (var i = 0; i < CONF.pods.length; i++) {
+    let _pod = CONF.pods[i],
+        _podName = _pod.podName;
+
+    // to check if the Pod table named by this exists
+    let existedPod = await checkPod(_podName);
+
+    if(existedPod.length) {
+      console.log('clear table');
+      console.log(_podName);
+      await clearPod(_podName);
+    } else {
+      console.log('create table');
+      await createPod(_podName);
+      await insertPod(podSummary, {
+        title: _podName,
+        description: 'English Podcast'
+      });
+    }
+
+    for (var j = 1; j <= _pod.podPages; j++) {
+      queuer.add(scanListPage(_pod).bind(null, getPodArticleListPageLink(_podName, j)));
+    }
+  };
 
   queuer.run();
 }
 
 setupAndRun();
 
-
-let superGet = promiser(superagent.get, superagent);
-let queuer = new Queuer();
-
-function getListPageLink(i) {
-  return `${conf.baseUrl}lesson/${conf.podName}/list_${i}.html`
+// Article List Page for Pod
+function getPodArticleListPageLink(podName, pageIndex) {
+  return `${CONF.baseUrl}lesson/${podName}/list_${pageIndex}.html`
 }
 
-function getArticlePageLink(partial) {
-  return url.resolve(conf.baseUrl, partial);
+// Article Page for Pod
+function getPodArticlePageLink(partial) {
+  return url.resolve(CONF.baseUrl, partial);
 }
 
-function getAudioLink(i) {
-  return `${conf.baseUrl}play.php?id=${i}`;
+// Audio Page link for Pod
+function getPodAudioLink(link) {
+  const pageIdPattern = /\d+(?=\.html)/,
+        audioPageId = parseInt(link.match(pageIdPattern)[0]);
+
+  return `${CONF.baseUrl}play.php?id=${audioPageId}`;
 }
 
 /**
@@ -70,7 +85,7 @@ async function detachData(page) {
 /**
  * @description get article pages url base on the list page
  */
-async function scanListPage (link) {
+const scanListPage = pod => async (link) => {
   let $,
       articleList,
       articleLink;
@@ -81,10 +96,10 @@ async function scanListPage (link) {
 
   articleList.each((i, article) => {
     articleLink = article.attribs.href;
-    articleLink = getArticlePageLink(articleLink);
+    articleLink = getPodArticlePageLink(articleLink);
 
     // Then Scan Article
-    queuer.add(scanArticlePage.bind(null, articleLink));
+    queuer.add(scanArticlePage(pod).bind(null, articleLink));
   });
 
   queuer.wake();
@@ -95,52 +110,39 @@ async function scanListPage (link) {
 /**
  * @description get article detail by article page link
  */
-async function scanArticlePage (link) {
+const scanArticlePage = pod => async (link) => {
   let $;
 
   $ = await detachData(link);
 
-  let dividingChar = String.fromCharCode(0x12),
-      noChinesePattern = /[^u4E00-u9FA5]/g,
-      podIdPattern = /\d+$/,
-      pageIdPattern = /\d+(?=\.html)/,
-      pageTitle = $('.title_viewbox h2').text(),
-      episodeTitle = '',
-      episodeId = '',
-      audioPageId = '',
-      paragraphs = [],
-      paragraphsList = [],
-      audioPageLink = '';
+  let episodeTitle,
+      episodeId,
+      episodeParagraph,
+      episodeAudioPageLink = '';
 
-  // episodeTitle = pageTitle.replace(noChinesePattern, '');
-  episodeTitle = pageTitle;
-  // episodeId = parseInt(episodeTitle.match(podIdPattern)[0]);
-  episodeId = pageTitle.replace(noChinesePattern, '');
-  audioPageId = parseInt(link.match(pageIdPattern)[0]);
-  paragraphs = $('#zoom p');
-
-  paragraphs.each(function (index) {
-    paragraphsList.push($(this).text());
-  });
+  episodeTitle = pod.getPodTitle($);
+  episodeId = pod.getPodId($);
+  episodeParagraph = pod.getPodParagraphs($);
 
   // Then Scan Audio
-  audioPageLink = getAudioLink(audioPageId);
-  queuer.add(scanAudioPage.bind(null, audioPageLink, episodeId));
+  episodeAudioPageLink = getPodAudioLink(link);
+  queuer.add(scanAudioPage(pod).bind(null, episodeAudioPageLink, episodeId));
+
   queuer.wake();
 
-  await insertPod(conf.podName, {
+  await insertPod(pod.podName, {
     podId: episodeId,
     podTitle: episodeTitle,
-    podParagraph: paragraphsList.join(dividingChar)
+    podParagraph: episodeParagraph
   });
 
-  console.log(`Insert article [${pageTitle}].`);
+  console.log(`Insert article [${episodeTitle}].`);
 }
 
 /**
  * @description get audio link by audio page link
  */
-async function scanAudioPage (link, podId) {
+const scanAudioPage = pod => async (link, podId) => {
   let $;
 
   $ = await detachData(link);
@@ -148,7 +150,7 @@ async function scanAudioPage (link, podId) {
   let mp3data = $("#dewplayer-vol").attr('data'),
       mp3url = mp3data.split('=')[1];
 
-  await updatePodAudio(conf.podName, mp3url, podId);
+  await updatePodAudio(pod.podName, mp3url, podId);
 
   console.log(`Insert audio for pod [${podId}].`);
 }
@@ -160,6 +162,6 @@ queuer.on('drain', () => {
   connection.end();
 })
 
-for (var i = 1; i <= conf.pageNum; i++) {
-  queuer.add(scanListPage.bind(null, getListPageLink(i)));
-};
+// for (var i = 1; i <= fpod.podPages; i++) {
+//   queuer.add(scanListPage.bind(null, getListPageLink(i)));
+// };
