@@ -46,7 +46,8 @@ const createPodSummary = async (tableName) => {
     await query('CREATE TABLE ?? (' +
                 ' id int(11) AUTO_INCREMENT,' +
                 ' title VARCHAR(45),' +
-                ' descriiption VARCHAR(200),' +
+                ' description VARCHAR(200),' +
+                ' coverImage VARCHAR(200),' +
                 ' count int(11),' +
                 ' PRIMARY KEY(id))'
                 , tableName);

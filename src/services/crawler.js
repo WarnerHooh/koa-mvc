@@ -37,6 +37,7 @@ async function setupAndRun() {
     } else {
       console.log('create table');
       await createPod(_podName);
+
       await insertPod(podSummary, {
         title: _podName,
         description: 'English Podcast'
