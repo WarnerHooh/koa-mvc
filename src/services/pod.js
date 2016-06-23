@@ -65,6 +65,7 @@ const createPod = async (podName) => {
   try {
     await query('CREATE TABLE ?? (' +
                       ' id int(11) AUTO_INCREMENT,' +
+                      ' uuid VARCHAR(36) NOT NULL,' +
                       ' podId int(11),' +
                       ' podTitle VARCHAR(45),' +
                       ' podParagraph VARCHAR(5000),' +

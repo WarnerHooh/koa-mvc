@@ -1,6 +1,7 @@
 import url from 'url';
 import superagent from 'superagent';
 import cheerio from 'cheerio';
+import uuid from 'node-uuid';
 
 import promiser from '../utils/promiser';
 import Queuer from '../utils/queuer';
@@ -132,6 +133,7 @@ const scanArticlePage = pod => async (link) => {
   queuer.wake();
 
   await insertPod(pod.podName, {
+    uuid: uuid.v4(),
     podId: episodeId,
     podTitle: episodeTitle,
     podParagraph: episodeParagraph

@@ -25,6 +25,7 @@
     "koa-router": "^7.0.1",
     "koa-static": "^3.0.0",
     "mysql": "github:felixge/node-mysql",
+    "node-uuid": "^1.4.7",
     "promise.prototype.finally": "^1.0.1",
     "superagent": "^1.4.0"
   },
